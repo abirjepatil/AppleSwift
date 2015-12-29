@@ -1,1 +1,0 @@
-/*How to add enumerations and Structures in Swift*/
