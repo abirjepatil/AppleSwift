@@ -7,13 +7,26 @@
 //
 
 import UIKit
+import CoreLocation
 
-class ViewController: UIViewController {
+//Adding CLLocationManger which will handle the part for looking and reporting the scan results
+class ViewController: UIViewController, CLLocationManagerDelegate {
 
+    
+    //Create an Instance of the CoreLocation Class
+    let locationManager = CLLocationManager() // This fellow will search for ble devices around
+    
+    
     @IBOutlet var TestInput: UITextField!
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+        //After Scanning the results should be available here
+        locationManager.delegate=self;// Similar to a call back
+        //requires user permission
+        locationManager.requestWhenInUseAuthorization()
+        
     }
 
     override func didReceiveMemoryWarning() {
