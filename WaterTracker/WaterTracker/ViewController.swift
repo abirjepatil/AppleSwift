@@ -9,10 +9,11 @@
 import UIKit
 import CoreLocation
 import HealthKit
+import CoreBluetooth
 
 //Adding CLLocationManger which will handle the part for looking and reporting the scan results
-class ViewController: UIViewController, CLLocationManagerDelegate {
-
+class ViewController: UIViewController, CLLocationManagerDelegate, CBCentralManagerDelegate {
+    var connectingPeripheral:CBPeripheral!
     //Create an Instance of the CoreLocation Class
     let locationManager = CLLocationManager() // This fellow will search for ble devices around
     let healthStore: HKHealthStore? = {
@@ -23,6 +24,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         }
     }()
     
+    var centralManager:CBCentralManager!
+    var blueToothReady = false
 
     
     @IBOutlet var TestInput: UITextField!
@@ -30,6 +33,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         self.WriteToHealthKit()
+        startUpCentralManager()
     }
 
     override func didReceiveMemoryWarning() {
@@ -110,6 +114,67 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     }
     
     
+    
+    func startUpCentralManager() {
+        print("Initializing central manager")
+        centralManager = CBCentralManager(delegate: self, queue: nil)
+    }
+    
+    func discoverDevices() {
+        print("discovering devices")
+        centralManager.scanForPeripheralsWithServices(nil, options: nil)
+    }
+    
+    
+    func centralManager(central: CBCentralManager, didDiscoverPeripheral peripheral: CBPeripheral, advertisementData: [String : AnyObject], RSSI: NSNumber) {
+
+        if peripheral.name == "WICED Proximity"
+        {
+        print("Discovered \(peripheral.name) \(peripheral.identifier) ")
+        self.centralManager.connectPeripheral(peripheral, options: nil)
+             self.connectingPeripheral = peripheral
+            centralManager.stopScan()
+        }
+    }
+    
+    
+    func centralManager(central: CBCentralManager!,didConnectPeripheral peripheral: CBPeripheral!)
+    {
+    //    connectingPeripheral.discoverServices(nil)
+        peripheral.discoverServices(nil)
+        print("Connected")
+        
+     
+    }
+    
+    
+    func centralManagerDidUpdateState(central: CBCentralManager!) {
+        print("checking state")
+        switch (central.state) {
+        case .PoweredOff:
+            print("CoreBluetooth BLE hardware is powered off")
+            
+        case .PoweredOn:
+            print("CoreBluetooth BLE hardware is powered on and ready")
+            blueToothReady = true;
+            
+        case .Resetting:
+            print("CoreBluetooth BLE hardware is resetting")
+            
+        case .Unauthorized:
+            print("CoreBluetooth BLE state is unauthorized")
+            
+        case .Unknown:
+            print("CoreBluetooth BLE state is unknown");
+            
+        case .Unsupported:
+            print("CoreBluetooth BLE hardware is unsupported on this platform");
+            
+        }
+        if blueToothReady {
+            discoverDevices()
+        }
+    }
     
     }
 
