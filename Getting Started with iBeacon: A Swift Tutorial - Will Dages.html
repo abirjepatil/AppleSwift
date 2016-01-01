@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Getting Started with iBeacon: A Swift Tutorial - Will Dages</title>
+
+		<meta name="description" content="A blog about technology, web development and more.">
+
+		<link rel="stylesheet" href="/themes/default/css/style.css">
+
+		<link rel="alternate" type="application/rss+xml" title="RSS" href="/feeds/rss">
+		<link rel="shortcut icon" href="/themes/default/img/favicon.png">
+
+		<!--[if lt IE 9]>
+			<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+
+		<script>var base = '/themes/default/';</script>
+		<script src="/anchor/views/assets/js/zepto.js"></script>
+		<script src="/themes/default/js/main.js"></script>
+
+	    <meta name="viewport" content="width=device-width">
+	    <meta name="generator" content="Anchor CMS">
+
+	    <meta property="og:title" content="Will Dages">
+	    <meta property="og:type" content="website">
+	    <meta property="og:url" content="posts/getting-started-with-ibeacon-a-swift-tutorial">
+	    <meta property="og:image" content="/themes/default/img/og_image.gif">
+	    <meta property="og:site_name" content="Will Dages">
+	    <meta property="og:description" content="A blog about technology, web development and more.">
+
+			</head>
+	<body class="posts home">
+		<div class="main-wrap">
+			<div class="slidey" id="tray">
+				<div class="wrap">
+					<form id="search" action="/search" method="post">
+						<label for="term">Search the blog:</label>
+						<input type="search" id="term" name="term" placeholder="To search, type and hit enter&hellip;" value="">
+					</form>
+
+					<aside>
+						<b>Categories</b>
+						<ul>
+													<li>
+								<a href="/category/development" title="">
+									Development <span>10</span>
+								</a>
+							</li>
+													<li>
+								<a href="/category/news" title="">
+									News <span>2</span>
+								</a>
+							</li>
+													<li>
+								<a href="/category/thoughts" title="">
+									Thoughts <span>4</span>
+								</a>
+							</li>
+													<li>
+								<a href="/category/tutorials" title="Step-by-step development tutorials.">
+									Tutorials <span>2</span>
+								</a>
+							</li>
+													<li>
+								<a href="/category/reviews" title="Reviews for products and services that I have personally used.">
+									Reviews <span>1</span>
+								</a>
+							</li>
+												</ul>
+					</aside>
+				</div>
+			</div>
+
+			<header id="top">
+				<a id="logo" href="/">Will Dages</a>
+
+								<nav id="main" role="navigation">
+					<ul>
+												<li class="active">
+							<a href="/posts" title="Home">
+								Posts							</a>
+						</li>
+												<li >
+							<a href="/apps" title="Apps">
+								Apps							</a>
+						</li>
+						
+						<li class="tray">
+							<a href="#tray" class="linky"><img src="/themes/default/img/categories.png" alt="Categories" title="View my posts by category"></a>
+						</li>
+					</ul>
+				</nav>
+							</header>
+		<section class="content wrap" id="article-30">
+			<h1>Getting Started with iBeacon: A Swift Tutorial</h1>
+
+			<article>
+				<p><strong>New! This tutorial is available as a free eBook.</strong> You can pay whatever you'd like (including $0), and all the content is the same (with a few small exceptions). <a href="https://leanpub.com/ibeacon-getting-started">Get the eBook</a></p>
+
+<p>This tutorial will show you how to write an iOS app that changes the color of the screen to match the color of the closest beacon. We'll be working with <a href="https://developer.apple.com/library/ios/documentation/CoreLocation/Reference/CoreLocation_Framework/index.html#//apple_ref/doc/uid/TP40007123">CoreLocation</a>, and writing everything in Swift for <del>iOS8</del> (as of 10/24/15 this has been updated for iOS 9 and Xcode 7.1). Although there are some nice SDKs out there, we aren't using anything but pure Swift for this. I want to show you how little code you actually need to get a proof-of-concept iBeacon app like this up and running. Plus, it's always good to have an understanding of what those SDKs are doing for you behind the scenes.</p>
+
+<p>All the code for this demo is available on GitHub here: <a href="https://github.com/willdages/closest-beacon-demo">closest-beacon-demo</a>, and here is a screencast of the tutorial, if you'd rather watch than read:</p>
+
+<div style="position:relative;width:100%;height:0;padding-bottom:56.25%;margin-bottom:1em;"><iframe style="position:absolute;width:100%;height:100%;" width="750" height="422" src="//www.youtube.com/embed/3jJiqzbzutU?rel=0" frameborder="0" allowfullscreen></iframe></div>
+
+<h3>Requirements</h3>
+
+<p>If you'd like to follow along, here's what you'll need:</p>
+
+<ul>
+<li>Xcode 6 or newer, so you can follow along with the Swift code.</li>
+<li>A BLE (Bluetooth Low Energy) iOS device (iPhone 4S or newer, iPod touch 5th gen or newer, iPad 3 or newer, or iPad mini) running iOS8 or later (we're writing in Swift). Make sure Bluetooth is turned on. You must use a real device (the Simulator cannot detect beacons).</li>
+<li>Beacons. I'm using <a href="http://estimote.com/">Estimote</a> beacons, but you can use anything you'd like. You can even download an app that will turn your device into a beacon, but it will need to be a different device than the one you're running this demo on.</li>
+</ul>
+
+<h3>Project Setup</h3>
+
+<p>To get started, create a new project and choose the Single View Application template.</p>
+
+<p><a href="http://cdn.willd.me/images/posts/ibeacon-tutorial/project-template.png"><img src="http://cdn.willd.me/images/posts/ibeacon-tutorial/project-template-sm.png" alt="Xcode Project Template Screen"></a></p>
+
+<p>On the project options screen, make sure you choose Swift as the language. You may choose whatever you'd like in the 'Devices' dropdown. You will need to load the app on a real device, so choose whichever applies to you.</p>
+
+<p><a href="http://cdn.willd.me/images/posts/ibeacon-tutorial/project-options.png"><img src="http://cdn.willd.me/images/posts/ibeacon-tutorial/project-options-sm.png" alt="Xcode Project Options Screen" title="Set the language to Swift, and the Devices to iPhone"></a></p>
+
+<h3>CoreLocation &amp; CLLocationManager</h3>
+
+<p>iBeacon technology is part of the CoreLocation framework, so the first thing we need to do is to include CoreLocation. Start by opening up <code>ViewController.swift</code> (where all the code is going for this example), and adding the import right at the top:</p>
+
+<pre><code>import UIKit
+<strong>import CoreLocation</strong></code></pre>
+
+<p>In order to use CoreLocation, we need to create an instance of a Core Location Manager, or <code>CLLocationManager</code>. Add this to the top of the ViewController class:</p>
+
+<pre><code>class ViewController: UIViewController {
+    <strong>let locationManager = CLLocationManager()</strong>
+    ...
+}
+</code></pre>
+
+<p>The <code>locationManager</code> will handle all the details of looking for the beacons and reporting its findings. It does this through delegate methods, so next we need to set up our View Controller to listen for these methods. First, let the View Controller know which delegate methods it will have available by telling it to follow the <code>CLLocationManagerDelegate</code> protocol:</p>
+
+<pre><code>class ViewController: UIViewController<strong>, CLLocationManagerDelegate</strong> {</code></pre>
+
+<p>Next, in <code>viewDidLoad()</code>, we need to let our <code>locationManager</code> know that this View Controller should be its delegate (where it should deliver its messages). Add this line inside of <code>viewDidLoad()</code>:</p>
+
+<pre><code>override func viewDidLoad() {
+    super.viewDidLoad()
+
+    <strong>locationManager.delegate = self;</strong>
+}</code></pre>
+
+<p>Now as soon as our locationManager starts working, we'll be able to access the results right from inside our View Controller. But there are a few more things we need to set up before it'll be able to start working.</p>
+
+<h3>Requesting Permission for Location Services</h3>
+
+<p>Any time we use location services in iOS, the user needs to approve the request. To request authorization, call one of two methods on our <code>locationManager</code> instance: <code>locationManager.requestWhenInUseAuthorization()</code>, or <code>locationManager.requestAlwaysAuthorization()</code>. The 'when in use' authorization only allows you to use location services while your app is in the foreground, whereas the 'always' authorization lets you access location services at any time, even waking up and starting your app in response to some event. For our purposes, we're just going to request the 'when in use' authorization. Add this line right after the last one:</p>
+
+<pre><code>override func viewDidLoad() {
+    super.viewDidLoad()
+
+    locationManager.delegate = self;
+    <strong>locationManager.requestWhenInUseAuthorization()</strong>
+}</code></pre>
+
+<p>The next step is to define the message that will explain why the user should approve the request. This is the text that will fill up the main section of the popup window that the system presents to the user. Open up your <code>info.plist</code> file (inside of the 'Supporting Files' folder) and add a new line by hovering over an existing line and clicking the circled '+' button.</p>
+
+<p><img src="http://cdn.willd.me/images/posts/ibeacon-tutorial/info-plist.gif" alt="Adding a new entry in the info.plist file" title="Hover over an existing line and click the circled + button"></p>
+
+<p>Add the key as 'NSLocationWhenInUseUsageDescription' (this will not auto-complete for you). Its type is a String, and you can fill in anything you'd like for the value.</p>
+
+<p>Now, you don't need to actually call this <code>requestWhenInUseAuthorization()</code> method every time the app runs, the user only needs to approve it once and your app will stay authorized. But if they go into settings and revoke your app's authorization, then you will need to ask again to be able to access location services again. Let's wrap our call in a conditional so that we only ask for authorization when we need it. </p>
+
+<p>You can access your app's authorization status through the <code>authorizationStatus()</code> class method on CLLocationManager. There are are few different cases when we may wish to request authorization, so let's just check to request authorization whenever the status <em>isn't</em> authorized for 'when in use'. Wrap our previous authorization request so it looks like this:</p>
+
+<pre><code><strong>if (CLLocationManager.authorizationStatus() != CLAuthorizationStatus.AuthorizedWhenInUse) {</strong>
+    locationManager.requestWhenInUseAuthorization()
+<strong>}</strong></code></pre>
+
+<p>Now, if the user denies the authorization, our app can't do anything. In a full-fledged responsible app, we would account for that denial with a message explaining that the app won't be able to do its magic, and perhaps give the user another chance to authorize. For this demo, we're going to keep it simple and just ignore that scenario.</p>
+
+<p>So now we have everything we need to get access to Location Services while our app is running. Go ahead and run the app and you'll see that you get a popup with the message we put in our <code>info.plist</code> requesting authorization.</p>
+
+<p><img src="http://cdn.willd.me/images/posts/ibeacon-tutorial/permission-request-crop.png" alt="Our demo app requesting Location Services authorization" title="This displays the message we put in our info.plist"></p>
+
+<p><em>Note: this is as far as you'll be able to get with the Simulator. From here on, you'll need to run the app on a real device (see the list of BLE iOS devices near the top of this tutorial).</em></p>
+
+<p>Ok, now that we have our locationManager set up, we have our View Controller delivering delegate methods, and our app has authorization to access Location Services, we're ready to start looking for beacons!</p>
+
+<h3>Regions</h3>
+
+<p>Our <code>locationManager</code> looks for beacons via <em>regions</em>. A region (<code>CLBeaconRegion</code>) defines which beacons our locationManager should care about. Each region defines a unique identifier (UUID) of the beacons which it should 'see'. There may be many beacons around, some of which aren't yours, and by defining a region with an identifier unique to your beacons, you can filter out the noise. For a refresher on how iBeacon uses UUID, Major, and Minor values, check out my earlier post on <a href="http://willd.me/posts/what-is-ibeacon-a-simple-explanation">What is iBeacon</a>.</p>
+
+<p>To define a region, you'll need to know the UUID of the beacons you are using. I'm using Estimote beacons, and I'm using the default UUID that they ship with. Add the following line near the top of our View Controller, swapping out the UUIDString with your own:</p>
+
+<pre><code>let locationManager = CLLocationManager()
+<strong>let region = CLBeaconRegion(proximityUUID: NSUUID(UUIDString: "B9407F30-F5F8-466E-AFF9-25556B57FE6D")!, identifier: "Estimotes")</strong>
+</code></pre>
+
+<p>The <code>identifier</code> is just an arbitrary string that you can use to reference a region. When beacons come back from our delegate method, they are delivered with the identifier of the region they were found in. This would be helpful if you were to monitor multiple regions, but since we aren't, I just set the identifier to "Estimotes" (the brand of beacon I'm currently using).</p>
+
+<p>Now that we have a region, we just need to have our locationManager start monitoring that region. A good place to do this is after we get authorization to use location services:</p>
+
+<pre><code>locationManager.delegate = self;
+if (CLLocationManager.authorizationStatus() != CLAuthorizationStatus.AuthorizedWhenInUse) {
+    locationManager.requestWhenInUseAuthorization()
+}
+<strong>locationManager.startRangingBeaconsInRegion(region)</strong></code></pre>
+
+<h3>Finding Beacons</h3>
+
+<p>Next up we want to be notified when a relevant beacon is found. For this, we'll use the <code>didRangeBeacons:inRegion</code> delegate method. Add this block of code (if you start typing 'locationManager', the delegate methods will pop up to auto-complete):</p>
+
+<pre><code>func locationManager(manager: CLLocationManager, didRangeBeacons beacons: [CLBeacon], inRegion region: CLBeaconRegion) {
+    println(beacons)
+}
+</code></pre>
+
+<p>The <code>println</code> is just going to log out the array of beacons that are found. Now is a good time to run the app on a device and keep an eye on the debug area in Xcode. You should see an array of beacons printing out at regular intervals.</p>
+
+<p><img src="http://cdn.willd.me/images/posts/ibeacon-tutorial/println-beacons.gif" alt="&quot;Debug area showing arrays of ranged beacons&quot;" title="You should see similar logging while your device is plugged into your computer."></p>
+
+<p>Inside that delegate method, we have access to the beacons that the locationManager has found. This method is called every time:</p>
+
+<ul>
+<li>A new beacon comes within range</li>
+<li>A beacon goes out of range (this will come into play soon!)</li>
+<li>A beacon gets closer or farther away</li>
+</ul>
+
+<p>Since the signal strength that gets reported from beacons tend to fluctuate quite a bit, you can count on this delegate method being called as often as a few times per second if there are beacons nearby.</p>
+
+<h3>Working with Beacons</h3>
+
+<p>Now, finally, we get to really dive in and talk about beacons! The delegate method is going to hand us an array of <code>CLBeacon</code> instances, each with a few properties that we'll need to use. The Major and Minor values are used to identify each beacon. In my case, the Estimotes all have different Major and Minor values. We'll use the Minor value to determine the color of the beacon:</p>
+
+<ul>
+<li>Blue: 31351</li>
+<li>Purple: 54482</li>
+<li>Green: 27327</li>
+</ul>
+
+<p>We're going to use these later, so let's put them in an array at the top of our View Controller. I'm using the minor values as keys (we'll reference these later), and I've come up with RGB values that are close to the color of my beacons. <em>Be sure to replace the keys with the minor values of the beacons that you are using.</em></p>
+
+<pre><code>let locationManager = CLLocationManager()
+let region = CLBeaconRegion(proximityUUID: NSUUID(UUIDString: "B9407F30-F5F8-466E-AFF9-25556B57FE6D")!, identifier: "Estimotes")
+<strong>let colors = [
+    54482: UIColor(red: 84/255, green: 77/255, blue: 160/255, alpha: 1),
+    31351: UIColor(red: 142/255, green: 212/255, blue: 220/255, alpha: 1),
+    27327: UIColor(red: 162/255, green: 213/255, blue: 181/255, alpha: 1)
+]</strong>
+</code></pre>
+
+<p>There are three other values on each beacon: <code>proximity</code>, <code>accuracy</code> and <code>rssi</code>. </p>
+
+<h4><code>proximity</code></h4>
+
+<p><code>proximity</code> is an enum (<a href="https://developer.apple.com/library/ios/documentation/CoreLocation/Reference/CLBeacon_class/index.html#//apple_ref/c/tdef/CLProximity"><code>CLProximity</code></a>) with four possible values, 0-3, relating to how close the beacon is. This is a good, simple way to determine placement of beacons in a general sense, when you only need to know whether you are far away (3), near (2), or right next to (1) a beacon. Unknown values are reported as 0.</p>
+
+<p>You should expect to have multiple beacons return with the same <code>proximity</code> value. If you need to get more specific (like we do), <code>proximity</code> won't be precise enough.</p>
+
+<h4><code>rssi</code></h4>
+
+<p><code>rssi</code> is a measurement (in decibels) of the signal strength of the beacon. This will be a negative whole number, and the bigger the number (the closer to 0), the stronger the signal. Unknown values are reported as 0.</p>
+
+<h4><code>accuracy</code></h4>
+
+<p><code>accuracy</code> is a real-world number that you can actually understand. But it comes with a catch: don't trust it. <code>accuracy</code> is a measurement <em>in meters</em> of the distance from the beacon, with unknown values reported as negative numbers (always -1 in my experience). </p>
+
+<p>The reason you shouldn't trust the meter measurement is that it is very unlikely to ever be accurate. There are a lot of factors that affect a Bluetooth signal, and this value is only guessed at by measuring signal strength. It isn't reliable enough to be used as a ruler or measuring tape, but could be used in a more general sense that accounts for a hefty margin of error.</p>
+
+<h3>Unknown Values</h3>
+
+<p>You will notice though that in all these cases, unknown values are still reported. For our purposes, we want to ignore any beacons with unknown values, so let's filter them out from the array in the delegate method. Back to writing code!</p>
+
+<p>We'll use the <code>CLProximity</code> enum to find and strip out the unknown beacons from the returned array. Apply the <code>filter</code> method on the array like this:</p>
+
+<pre><code>func locationManager(manager: CLLocationManager, didRangeBeacons beacons: [CLBeacon], inRegion region: CLBeaconRegion) {
+    <strong>let knownBeacons = beacons.filter{ $0.proximity != CLProximity.Unknown }</strong>
+}</code></pre>
+
+<p>Here, we're creating a new array by filtering the <code>beacons</code> array that the <code>didRangeBeacons</code> method gave us. In the filter method, we're basically letting anything through as long as its proximity value doesn't match <code>CLProximity.Unknown</code>.</p>
+
+<h3>The Closest Beacon</h3>
+
+<p>Now for a note on the <code>beacons</code> array, and our new <code>knownBeacons</code> array. From my testing, the beacons arrive in the <code>beacons</code> array already sorted from closest to farthest, with unknowns coming in first, before the closest known beacon. That said, I can't find anywhere in the documentation mentions this, so I can't recommend relying on this to always happen in a production application. For the sake of simplicity here, we're going to just grab the first element in the <code>beacons</code> array as the closest beacon.</p>
+
+<pre><code>func locationManager(manager: CLLocationManager, didRangeBeacons beacons: [CLBeacon], inRegion region: CLBeaconRegion) {
+    let knownBeacons = beacons.filter{ $0.proximity != CLProximity.Unknown }
+    <strong>if (knownBeacons.count > 0) {
+        let closestBeacon = knownBeacons[0] as CLBeacon
+    }</strong>
+}</code></pre>
+
+<p>Next, we want to change the color of the background. We'll use the <code>colors</code> array for this, using the minor value of the closest beacon as the key for the color:</p>
+
+<pre><code>func locationManager(manager: CLLocationManager, didRangeBeacons beacons: [CLBeacon], inRegion region: CLBeaconRegion) {
+    let knownBeacons = beacons.filter{ $0.proximity != CLProximity.Unknown }
+    if (knownBeacons.count > 0) {
+        let closestBeacon = knownBeacons[0] as CLBeacon
+        <strong>self.view.backgroundColor = self.colors[closestBeacon.minor.integerValue]</strong>
+    }
+}</code></pre>
+
+<p>And that's it! Run the app and start moving beacons closer and farther away from your device, and watch the background color change.</p>
+
+<p><img src="http://cdn.willd.me/images/posts/ibeacon-tutorial/app-demo.gif" alt="The demo app in action"></p>
+
+<p>If it isn't working, here are a few things to double-check:</p>
+
+<ul>
+<li>You loaded the app onto a device, not the simulator. The simulator won't detect beacons.</li>
+<li>You're using a BLE device (see a list near the top of the post) and Bluetooth is turned on.</li>
+<li>You approved the request to use Location Services. If you accidentally hit Deny, you can either delete the app, or go into the Settings app and approve it manually.</li>
+<li>You updated your <code>region</code> to use the <code>UUID</code> of <em>your</em> beacons.</li>
+<li>In the <code>colors</code> array, you are using the minor values of <em>your</em> beacons for the keys.</li>
+</ul>
+			</article>
+
+			<section class="footnote">
+				<!-- Unfortunately, CSS means everything's got to be inline. -->
+				<p></p>
+			</section>
+		</section>
+
+		
+		<div class="wrap">
+	            <footer id="bottom">
+	                <small>&copy; 2015 Will Dages. All rights reserved.</small>
+
+	                <ul role="navigation">
+	                    <li><a href="https://twitter.com/willdages" title="@willdages">Twitter</a></li>
+	                    <li><a href="https://github.com/willdages" title="willdages">GitHub</a></li>
+	                    <li><a href="/feeds/rss">RSS</a></li>
+	                </ul>
+	            </footer>
+
+	        </div>
+        </div>
+    	<script type="text/javascript">
+
+  // var _gaq = _gaq || [];
+  // _gaq.push(['_setAccount', 'UA-40499533-1']);
+  // _gaq.push(['_trackPageview']);
+
+  // (function() {
+  //   var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+  //   ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+  //   var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  // })();
+
+  var GoSquared = {};
+  GoSquared.acct = "GSN-267032-J";
+  (function(w){
+    function gs(){
+      w._gstc_lt = +new Date;
+      var d = document, g = d.createElement("script");
+      g.type = "text/javascript";
+      g.src = "//d1l6p2sc9645hc.cloudfront.net/tracker.js";
+      var s = d.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(g, s);
+    }
+    w.addEventListener ?
+      w.addEventListener("load", gs, false) :
+      w.attachEvent("onload", gs);
+  })(window);
+
+</script>    </body>
+</html>
