@@ -214,10 +214,13 @@ class ViewController: UIViewController, CLLocationManagerDelegate, CBCentralMana
             let dataLength = dataBytes!.length
             var dataArray = [Int16](count: dataLength, repeatedValue: 0)
             dataBytes!.getBytes(&dataArray, length: dataLength * sizeof(Int16))
-            
+        
+        
+        
             // Element 1 of the array will be ambient temperature raw value
-            let ambientTemperature = Double(dataArray[1])/128
-            
+            let ambientTemperature = Double(dataArray[0])/128
+        
+        
             // Display on the temp label
             print(ambientTemperature)
         //self.tempLabel.text = NSString(format: "%.2f", ambientTemperature)
