@@ -12,8 +12,8 @@ import HealthKit
 import CoreBluetooth
 
 //Adding CLLocationManger which will handle the part for looking and reporting the scan results
-class ViewController: UIViewController, CLLocationManagerDelegate, CBCentralManagerDelegate {
-    var connectingPeripheral:CBPeripheral!
+class ViewController: UIViewController, CLLocationManagerDelegate, CBCentralManagerDelegate, CBPeripheralDelegate {
+    var sensorTagPeripheral : CBPeripheral!
     //Create an Instance of the CoreLocation Class
     let locationManager = CLLocationManager() // This fellow will search for ble devices around
     let healthStore: HKHealthStore? = {
@@ -131,9 +131,19 @@ class ViewController: UIViewController, CLLocationManagerDelegate, CBCentralMana
         if peripheral.name == "WICED Proximity"
         {
         print("Discovered \(peripheral.name) \(peripheral.identifier) ")
-        self.centralManager.connectPeripheral(peripheral, options: nil)
+        /*
+            self.centralManager.connectPeripheral(peripheral, options: nil)
              self.connectingPeripheral = peripheral
             centralManager.stopScan()
+        */
+            // Stop scanning
+            self.centralManager.stopScan()
+            // Set as the peripheral to use and establish connection
+            self.sensorTagPeripheral = peripheral
+            self.sensorTagPeripheral.delegate = self
+            self.centralManager.connectPeripheral(peripheral, options: nil)
+        
+        
         }
     }
     
@@ -143,9 +153,75 @@ class ViewController: UIViewController, CLLocationManagerDelegate, CBCentralMana
     //    connectingPeripheral.discoverServices(nil)
         peripheral.discoverServices(nil)
         print("Connected")
-        
-     
     }
+    
+    
+    // Check if the service discovered is a valid IR Temperature Service
+    func peripheral(peripheral: CBPeripheral!, didDiscoverServices error: NSError!) {
+        print("Looking at peripheral services")
+        for service in peripheral.services! {
+            let thisService = service as CBService
+         //  if service.UUID == 1803 {
+                // Discover characteristics of IR Temperature Service
+                peripheral.discoverCharacteristics(nil, forService: thisService)
+            
+           // }
+           //  Uncomment to print list of UUIDs
+            print(thisService.UUID)
+        }
+    }
+    
+    
+    // Enable notification and sensor for each characteristic of valid service
+    func peripheral(peripheral: CBPeripheral!, didDiscoverCharacteristicsForService service: CBService!, error: NSError!) {
+        
+        // update status label
+        print( "Enabling sensors")
+        
+        // 0x01 data byte to enable sensor
+        var enableValue = 1
+        let enablyBytes = NSData(bytes: &enableValue, length: sizeof(UInt8))
+        
+        // check the uuid of each characteristic to find config and data characteristics
+        for charateristic in service.characteristics! {
+            
+            let thisCharacteristic = charateristic as CBCharacteristic
+            // check for data characteristic
+           // if thisCharacteristic.UUID == IRTemperatureDataUUID {
+                // Enable Sensor Notification
+                sensorTagPeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
+            //}
+            // check for config characteristic
+           // if thisCharacteristic.UUID == IRTemperatureConfigUUID {
+                // Enable Sensor
+                //self.sensorTagPeripheral.writeValue(enablyBytes, forCharacteristic: thisCharacteristic, type: CBCharacteristicWriteType.WithResponse)
+            //}
+        }
+        
+    }
+
+    
+    // Get data values when they are updated
+    func peripheral(peripheral: CBPeripheral!, didUpdateValueForCharacteristic characteristic: CBCharacteristic!, error: NSError!) {
+        
+       print( "Connected")
+        
+      //  if characteristic.UUID == IRTemperatureDataUUID {
+            // Convert NSData to array of signed 16 bit values
+            let dataBytes = characteristic.value
+            let dataLength = dataBytes!.length
+            var dataArray = [Int16](count: dataLength, repeatedValue: 0)
+            dataBytes!.getBytes(&dataArray, length: dataLength * sizeof(Int16))
+            
+            // Element 1 of the array will be ambient temperature raw value
+            let ambientTemperature = Double(dataArray[1])/128
+            
+            // Display on the temp label
+            print(ambientTemperature)
+        //self.tempLabel.text = NSString(format: "%.2f", ambientTemperature)
+      //  }
+    }
+
     
     
     func centralManagerDidUpdateState(central: CBCentralManager!) {
