@@ -127,8 +127,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate, CBCentralMana
     
     
     func centralManager(central: CBCentralManager, didDiscoverPeripheral peripheral: CBPeripheral, advertisementData: [String : AnyObject], RSSI: NSNumber) {
+        
+         print("Discovered \(peripheral.name) \(peripheral.identifier) ")
 
-        if peripheral.name == "WICED Proximity"
+        if peripheral.name == "BLE HR Monitor"
         {
         print("Discovered \(peripheral.name) \(peripheral.identifier) ")
         /*
